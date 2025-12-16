@@ -9,9 +9,9 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['api.auth'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware('api.auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -23,12 +23,10 @@ use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CategoryController;
 
-// Authors - Public routes
 Route::get('authors', [AuthorController::class, 'index'])->name('authors.index');
-Route::get('authors/{author}', [AuthorController::class, 'show'])->name('authors.show');
-
-// Authors - Protected routes (require authentication)
-Route::middleware('auth')->group(function () {
+Route::get('authors/export/csv', [AuthorController::class, 'exportCsv'])->name('authors.export.csv');
+Route::get('authors/export/pdf', [AuthorController::class, 'exportPdf'])->name('authors.export.pdf');
+Route::middleware('api.auth')->group(function () {
     Route::get('authors/create', [AuthorController::class, 'create'])->name('authors.create');
     Route::post('authors', [AuthorController::class, 'store'])->name('authors.store');
     Route::get('authors/{author}/edit', [AuthorController::class, 'edit'])->name('authors.edit');
@@ -36,12 +34,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('authors/{author}', [AuthorController::class, 'destroy'])->name('authors.destroy');
 });
 
-// Books - Public routes
-Route::get('books', [BookController::class, 'index'])->name('books.index');
-Route::get('books/{book}', [BookController::class, 'show'])->name('books.show');
+Route::get('authors/{author}', [AuthorController::class, 'show'])->name('authors.show');
 
-// Books - Protected routes (require authentication)
-Route::middleware('auth')->group(function () {
+Route::get('books', [BookController::class, 'index'])->name('books.index');
+Route::get('books/export/csv', [BookController::class, 'exportCsv'])->name('books.export.csv');
+Route::get('books/export/pdf', [BookController::class, 'exportPdf'])->name('books.export.pdf');
+Route::middleware('api.auth')->group(function () {
     Route::get('books/create', [BookController::class, 'create'])->name('books.create');
     Route::post('books', [BookController::class, 'store'])->name('books.store');
     Route::get('books/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
@@ -49,15 +47,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
 });
 
-// Categories - Public routes
-Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
-Route::get('categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+Route::get('books/{book}', [BookController::class, 'show'])->name('books.show');
 
-// Categories - Protected routes (require authentication)
-Route::middleware('auth')->group(function () {
+
+Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('categories/export/csv', [CategoryController::class, 'exportCsv'])->name('categories.export.csv');
+Route::get('categories/export/pdf', [CategoryController::class, 'exportPdf'])->name('categories.export.pdf');
+Route::middleware('api.auth')->group(function () {
     Route::get('categories/create', [CategoryController::class, 'create'])->name('categories.create');
     Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::get('categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
     Route::match(['put', 'patch'], 'categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 });
+
+Route::get('categories/{category}', [CategoryController::class, 'show'])->name('categories.show');

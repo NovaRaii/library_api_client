@@ -7,7 +7,13 @@
     
         <ul>
             <table>
-            <a href="{{ route(name: 'categories.create') }}" title="Új">Új hozzáadása</a>
+            <div style="margin-bottom: 15px;">
+                @if($isAuthenticated)
+                <a href="{{ route('categories.create') }}" title="Új">Új hozzáadása</a>
+                @endif
+                <a href="{{ route('categories.export.csv') }}" class="btn" style="margin-left: 10px;">Export CSV</a>
+                <a href="{{ route('categories.export.pdf') }}" class="btn" style="margin-left: 10px;">Export PDF</a>
+            </div>
             @foreach($categories as $category)
                 <li class="row {{ $loop->iteration % 2 == 0 ? 'even' : 'odd' }}">
                     <div class="col id">{{ $category->id }}</div>
@@ -22,6 +28,7 @@
                         </div>
     
                         
+                            @if($isAuthenticated)
                             <div class="col">
                                 <a href="{{ route('categories.edit', $category->id) }}"><button>Módosít</button></a>
                             </div>
@@ -34,6 +41,7 @@
         <button type="submit" class="btn">Töröl</button>
     </form>
                             </div>
+                            @endif
                         
                     </div>
     

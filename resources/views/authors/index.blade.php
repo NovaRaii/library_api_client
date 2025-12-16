@@ -7,7 +7,11 @@
  
     <ul>
         <div style="margin-bottom: 15px;">
+            @if($isAuthenticated)
             <a href="{{ route('authors.create') }}" title="Új">Új hozzáadása</a>
+            @endif
+            <a href="{{ route('authors.export.csv') }}" class="btn" style="margin-left: 10px;">Export CSV</a>
+            <a href="{{ route('authors.export.pdf') }}" class="btn" style="margin-left: 10px;">Export PDF</a>
         </div>
         @foreach($authors as $author)
             <li class="row {{ $loop->iteration % 2 == 0 ? 'even' : 'odd' }}">
@@ -23,6 +27,7 @@
 {{--                        <a href="{{ route('authors.show', $author->id) }}"><button type="button"><i class="fa fa-binoculars" title="Mutat"></i></button></a>--}}
                     </div>
 
+                    @if($isAuthenticated)
                     <div class="col">
                         <a href="{{ route('authors.edit', $author->id) }}" class="btn">Módosít</a>
                     </div>
@@ -35,6 +40,7 @@
                             <button type="submit" class="btn">Töröl</button>
                         </form>
                     </div>
+                    @endif
                 </div>
             </li>
         @endforeach

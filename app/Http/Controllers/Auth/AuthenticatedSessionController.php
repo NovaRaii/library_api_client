@@ -55,6 +55,6 @@ class AuthenticatedSessionController extends Controller
         session()->forget('user_name');
         session()->forget('user_email');
 
-        return redirect('/');
+        return back();
     }
 }

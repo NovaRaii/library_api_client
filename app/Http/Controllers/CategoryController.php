@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Response;
 
 class CategoryController extends Controller
 {
@@ -153,6 +155,84 @@ class CategoryController extends Controller
             }
 
             return redirect()->route('categories.index')->with('success', 'Kategória sikeresen törölve');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Hiba: ' . $e->getMessage());
+        }
+    }
+    /**
+     * Export categories to CSV
+     */
+    public function exportCsv(Request $request)
+    {
+        try {
+            $response = Http::api()->get('/categories');
+
+            if ($response->failed()) {
+                return back()->with('error', 'Hiba történt az exportálás során.');
+            }
+
+            $categories = $response->json();
+            $categories = collect($categories['categories'] ?? ($categories['data'] ?? $categories))->map(function ($item) {
+                return (object) $item;
+            });
+
+            // Create CSV content
+            $csvData = [];
+            $csvData[] = ['ID', 'Név'];
+
+            foreach ($categories as $category) {
+                $csvData[] = [
+                    $category->id,
+                    $category->name
+                ];
+            }
+
+            // Generate CSV
+            $filename = 'categories_' . date('Y-m-d_His') . '.csv';
+            $handle = fopen('php://temp', 'r+');
+            
+            foreach ($csvData as $row) {
+                fputcsv($handle, $row);
+            }
+            
+            rewind($handle);
+            $csv = stream_get_contents($handle);
+            fclose($handle);
+
+            return Response::make($csv, 200, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Hiba: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Export categories to PDF
+     */
+    public function exportPdf(Request $request)
+    {
+        try {
+            $response = Http::api()->get('/categories');
+
+            if ($response->failed()) {
+                return back()->with('error', 'Hiba történt az exportálás során.');
+            }
+
+            $categories = $response->json();
+            $categories = collect($categories['categories'] ?? ($categories['data'] ?? $categories))->map(function ($item) {
+                return (object) $item;
+            });
+
+            $pdf = Pdf::loadView('categories.pdf', [
+                'categories' => $categories,
+                'exportDate' => date('Y-m-d H:i:s')
+            ]);
+
+            return $pdf->download('categories_' . date('Y-m-d_His') . '.pdf');
 
         } catch (\Exception $e) {
             return back()->with('error', 'Hiba: ' . $e->getMessage());

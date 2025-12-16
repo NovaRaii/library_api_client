@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Response;
 
 class AuthorController extends Controller
 {
@@ -161,6 +163,87 @@ class AuthorController extends Controller
             }
 
             return redirect()->route('authors.index')->with('success', 'Szerző sikeresen törölve');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Hiba: ' . $e->getMessage());
+        }
+    }
+    /**
+     * Export authors to CSV
+     */
+    public function exportCsv(Request $request)
+    {
+        try {
+            $response = Http::api()->get('/authors');
+
+            if ($response->failed()) {
+                return back()->with('error', 'Hiba történt az exportálás során.');
+            }
+
+            $authors = $response->json();
+            $authors = collect($authors['authors'] ?? ($authors['data'] ?? $authors))->map(function ($item) {
+                return (object) $item;
+            });
+
+            // Create CSV content
+            $csvData = [];
+            $csvData[] = ['ID', 'Név', 'Nemzetiség', 'Kor', 'Nem'];
+
+            foreach ($authors as $author) {
+                $csvData[] = [
+                    $author->id,
+                    $author->name,
+                    $author->nationality ?? '',
+                    $author->age ?? '',
+                    $author->gender ?? ''
+                ];
+            }
+
+            // Generate CSV
+            $filename = 'authors_' . date('Y-m-d_His') . '.csv';
+            $handle = fopen('php://temp', 'r+');
+            
+            foreach ($csvData as $row) {
+                fputcsv($handle, $row);
+            }
+            
+            rewind($handle);
+            $csv = stream_get_contents($handle);
+            fclose($handle);
+
+            return Response::make($csv, 200, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Hiba: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Export authors to PDF
+     */
+    public function exportPdf(Request $request)
+    {
+        try {
+            $response = Http::api()->get('/authors');
+
+            if ($response->failed()) {
+                return back()->with('error', 'Hiba történt az exportálás során.');
+            }
+
+            $authors = $response->json();
+            $authors = collect($authors['authors'] ?? ($authors['data'] ?? $authors))->map(function ($item) {
+                return (object) $item;
+            });
+
+            $pdf = Pdf::loadView('authors.pdf', [
+                'authors' => $authors,
+                'exportDate' => date('Y-m-d H:i:s')
+            ]);
+
+            return $pdf->download('authors_' . date('Y-m-d_His') . '.pdf');
 
         } catch (\Exception $e) {
             return back()->with('error', 'Hiba: ' . $e->getMessage());

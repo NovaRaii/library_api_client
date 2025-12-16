@@ -1,10 +1,10 @@
-l@extends('layout')
+@extends('layout')
  
 @section('content')
 <h1>Könyvek</h1>
 
 <form method="GET" action="{{ route('books.index') }}">
-    <input type="text" name="search" value="{{ request('search') }}" placeholder="Keresés...">
+    <input type="text" name="search" value="{{ $search }}" placeholder="Keresés...">
     <button type="submit">Keresés</button>
 
     <select name="category" onchange="this.form.submit()">
@@ -18,7 +18,20 @@ l@extends('layout')
 </form>
 
 <div>
+    @if($isAuthenticated)
     <a href="{{ route('books.create') }}" title="Új">Új hozzáadása</a>
+    @endif
+    
+    <div style="float: right;">
+        <a href="{{ route('books.export.csv', request()->query()) }}" title="CSV Export">
+            <button type="button">📊 CSV Export</button>
+        </a>
+        <a href="{{ route('books.export.pdf', request()->query()) }}" title="PDF Export">
+            <button type="button">📄 PDF Export</button>
+        </a>
+    </div>
+    <div style="clear: both;"></div>
+
 
     <table border="1" cellpadding="5" cellspacing="0" style="width:100%; margin-top:10px;">
         <thead>
@@ -49,6 +62,7 @@ l@extends('layout')
                         <small>Kategória: {{ $categories->firstWhere('id', $book->category_id)->name ?? 'Ismeretlen' }}</small>
                     </td>
                     <td>
+                        @if($isAuthenticated)
                         <a href="{{ route('books.edit', $book->id) }}"><button>Módosít</button></a>
                         <form action="{{ route('books.destroy', $book->id) }}" method="POST" 
                               onsubmit="return confirm('Biztos törlöd?');" style="display:inline;">
@@ -56,6 +70,7 @@ l@extends('layout')
                             @method('DELETE')
                             <button type="submit">Töröl</button>
                         </form>
+                        @endif
                     </td>
                 </tr>
             @endforeach
